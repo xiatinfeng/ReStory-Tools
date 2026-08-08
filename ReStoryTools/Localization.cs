@@ -25,13 +25,15 @@ namespace ReStoryTools
                 ["toggle_screw"] = ("批量拆装螺丝（拆一颗连拆 / 装一颗连装）",
                                     "Batch Screws (chain dismantle / chain install)"),
                 ["toggle_element"] = ("元件批量自动拆卸", "Auto-Dismantle Elements"),
+                ["toggle_solder"] = ("一键电焊（焊接自动完成） [Ctrl+E]", "Auto-Solder (complete soldering instantly) [Ctrl+E]"),
                 ["btn_assemble"] = ("元件一键拼合（工作台当前层） [R]",
                                     "Assemble Elements (workbench) [R]"),
                 ["btn_collect"] = ("超声波一键收料 [T]", "Collect from Sonic Bath [T]"),
-                ["state_line"] = ("开关：批量拆装={0} 元件拆装={1}",
-                                  "Toggles: BatchScrew={0} ElementDism={1}"),
-                ["hotkeys_line"] = ("快捷键：R=拼合 T=收料 Ctrl+R/T=开关",
-                                    "Hotkeys: R=Assemble T=Collect Ctrl+R/T=Toggle"),
+                ["btn_collect_workbench"] = ("工作台收料进库存 [E]", "Collect workbench parts to storage [E]"),
+                ["state_line"] = ("开关：批量拆装={0} 元件拆装={1} 电焊={2}",
+                                  "Toggles: BatchScrew={0} ElementDism={1} Solder={2}"),
+                ["hotkeys_line"] = ("快捷键：R=拼合 T=收料 E=台面收料 Ctrl+R/T=开关 Ctrl+E=电焊",
+                                    "Hotkeys: R=Assemble T=Collect E=BenchCollect Ctrl+R/T=Toggle Ctrl+E=Solder"),
             };
 
         static L()

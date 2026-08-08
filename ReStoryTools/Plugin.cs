@@ -7,7 +7,9 @@ using Restory.Data.Elements.Condition;
 using Restory.Gameplay.Devices;
 using Restory.Gameplay.Elements;
 using Restory.Gameplay.Equipment.Ultrasonic;
+using Restory.Gameplay.Inventory;
 using Restory.Gameplay.Workplace;
+using Restory.StorageSystem.StorageElements;
 using UnityEngine;
 
 namespace ReStoryTools
@@ -18,7 +20,7 @@ namespace ReStoryTools
     ///    UltrasonicService.TryRetrieveAllElements（现成全取）→ ElementService.TrySendItemToStorage（现成入库）
     /// 面板：F9 切换显示；按钮触发收料（队列到 Update 执行，避免 OnGUI 内做场景操作）。
     /// </summary>
-    [BepInPlugin("com.restorytools.qol", "ReStory QoL Tools", "0.2.0")]
+    [BepInPlugin("com.restorytools.qol", "ReStory QoL Tools", "0.8.2")]
     public class Plugin : BaseUnityPlugin
     {
         private static Plugin _instance;
@@ -33,9 +35,11 @@ namespace ReStoryTools
         private bool _showPanel;
         private bool _batchScrew;
         private bool _autoDismantle;
+        private bool _solderMode;
         private bool _collectRequested;
         private bool _installAllRequested;
-        private Rect _windowRect = new Rect(60, 60, 340, 250);
+        private bool _collectWorkbenchRequested;
+        private Rect _windowRect = new Rect(60, 60, 340, 290);
 
         private void Awake()
         {
@@ -99,6 +103,19 @@ namespace ReStoryTools
                     Logger.LogInfo("[ReStoryTools] 超声波一键收料（T）");
                 }
             }
+            else if (Input.GetKeyDown(KeyCode.E))
+            {
+                if (ctrl)
+                {
+                    _solderMode = !_solderMode;
+                    Logger.LogInfo($"[ReStoryTools] 一键电焊 {(_solderMode ? "开启" : "关闭")}（Ctrl+E）");
+                }
+                else
+                {
+                    _collectWorkbenchRequested = true;
+                    Logger.LogInfo("[ReStoryTools] 工作台收料（E）");
+                }
+            }
 
             // F9：切换 IMGUI 面板
             if (Input.GetKeyDown(KeyCode.F9))
@@ -128,6 +145,13 @@ namespace ReStoryTools
                 _installAllRequested = false;
                 DoInstallAllFromWorkSurface();
             }
+
+            // 处理排队的"工作台收料"请求
+            if (_collectWorkbenchRequested)
+            {
+                _collectWorkbenchRequested = false;
+                DoCollectFromWorkbench();
+            }
         }
 
         /// <summary>Unity 原生 IMGUI 面板</summary>
@@ -145,6 +169,7 @@ namespace ReStoryTools
 
             _batchScrew = GUILayout.Toggle(_batchScrew, L.T("toggle_screw"));
             _autoDismantle = GUILayout.Toggle(_autoDismantle, L.T("toggle_element"));
+            _solderMode = GUILayout.Toggle(_solderMode, L.T("toggle_solder"));
 
             GUILayout.Space(4);
             if (GUILayout.Button(L.T("btn_assemble")))
@@ -157,9 +182,14 @@ namespace ReStoryTools
                 _collectRequested = true;
                 Logger.LogInfo("[ReStoryTools] 一键收料请求已排队");
             }
+            if (GUILayout.Button(L.T("btn_collect_workbench")))
+            {
+                _collectWorkbenchRequested = true;
+                Logger.LogInfo("[ReStoryTools] 工作台收料请求已排队");
+            }
 
             GUILayout.Space(6);
-            GUILayout.Label(L.T("state_line", _batchScrew, _autoDismantle));
+            GUILayout.Label(L.T("state_line", _batchScrew, _autoDismantle, _solderMode));
 
             GUILayout.Space(6);
             GUILayout.Label(L.T("hotkeys_line"));
@@ -280,10 +310,109 @@ namespace ReStoryTools
                 }
 
                 Logger.LogInfo($"[ReStoryTools] 元件一键拼合：装上 {installed}，污染跳过 {skippedDirty}（拖拽聚集清洗），损坏回收 {recycled}，非当前层跳过 {skippedNoSlot}");
+
+                // ★ v0.8.1：库存补充（材料堆优先原则）——工作台没有的元件，从元件库存取来装上
+                // 工作台优先（上面已拼合）→ 库存补充（这里）→ 缺货统计
+                var inventory = TryResolve<IInventory>();
+                var elementService2 = TryResolve<ElementService>();
+                int stocked = 0;
+                var missingSet = new HashSet<string>();
+                if (deviceService?.PlacedDeviceContainer?.Device != null && inventory != null && elementService2 != null)
+                {
+                    foreach (var socket in deviceService.PlacedDeviceContainer.Device.ElementSockets)
+                    {
+                        if (socket.NestedElement != null) continue;  // 已有元件（含刚拼合的）
+                        if (!socket.IsAvailable) continue;            // 被上层挡住（未解锁）
+                        var need = socket.CompatibleElementInfo;
+                        if (need == null) continue;
+
+                        // 从库存找"类型匹配 + 干净"的元件
+                        StorageItemElement found = null;
+                        int foundIndex = -1;
+                        var storage = inventory.StorageElements;
+                        if (storage != null)
+                        {
+                            for (int i = 0; i < storage.Size; i++)
+                            {
+                                var slot = storage[i];
+                                if (slot == null || slot.IsEmpty()) continue;
+                                if (!(slot.Item is StorageItemElement sie)) continue;
+                                if (!ReferenceEquals(sie.Info, need)) continue; // 引用比较（与游戏 socket 校验一致）
+                                if (sie.ElementData?.Condition is DamagedElementCondition) continue; // 损坏件留给玩家
+                                if (sie.ElementData?.Condition is DirtyElementCondition) continue;     // 污染件留给玩家
+                                found = sie;
+                                foundIndex = slot.Index;
+                                break;
+                            }
+                        }
+
+                        if (found == null)
+                        {
+                            var key = need.NameLocalizationKey;
+                            if (!string.IsNullOrEmpty(key)) missingSet.Add(key); // 缺货清单
+                            continue;
+                        }
+
+                        try
+                        {
+                            // 玩家原版同款：StorageItemElement.ElementData.Clone() → CreateElementOnSurface 实体化
+                            var elem = elementService2.CreateElementOnSurface(found.ElementData.Clone());
+                            if (elem != null)
+                            {
+                                socket.AttachElement(elem);
+                                storage.ClearItem(foundIndex); // 从库存移除该槽
+                                stocked++;
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            Logger.LogError($"[ReStoryTools] 库存补充异常 {need.NameLocalizationKey}：{e.Message}");
+                        }
+                    }
+                }
+
+                Logger.LogInfo($"[ReStoryTools] 元件一键拼合：装上 {installed}，库存补充 {stocked}，缺货 {missingSet.Count} 种{(missingSet.Count > 0 ? "（" + string.Join(", ", missingSet.Take(5)) + "）" : "")}");
             }
             catch (Exception e)
             {
                 Logger.LogError($"[ReStoryTools] 元件一键拼合异常：{e}");
+            }
+        }
+
+        /// <summary>
+        /// E 键 / 面板按钮：工作台收料。
+        /// 遍历工作台表面游离元件（PlacedElements）→ TrySendItemToStorage 入库。
+        /// 只收"工作台表面的"元件——设备上装着的（socket.NestedElement）不在此列表 → 不影响组装中的设备；
+        /// 损坏件会被 TrySendItemToStorage 自动拒绝（留在工作台，玩家手动处理）。
+        /// </summary>
+        private void DoCollectFromWorkbench()
+        {
+            try
+            {
+                var workSurface = TryResolve<WorkSurface>();
+                var elementService = TryResolve<ElementService>();
+                if (workSurface == null || elementService == null)
+                {
+                    Logger.LogWarning($"[ReStoryTools] 工作台收料：服务不可用 WorkSurface={workSurface != null} ElementService={elementService != null}");
+                    return;
+                }
+
+                // 快照遍历（TrySendItemToStorage 会从 PlacedElements 移除元件）
+                var candidates = workSurface.PlacedElements
+                    .Where(e => e != null && !e.IsDragging)
+                    .ToList();
+
+                int stored = 0, skipped = 0;
+                foreach (var element in candidates)
+                {
+                    if (elementService.TrySendItemToStorage(element)) stored++;
+                    else skipped++; // 损坏件等被拒 → 留工作台
+                }
+                Logger.LogInfo($"[ReStoryTools] 工作台收料完成：入库 {stored}，跳过 {skipped}（损坏件等）");
+            }
+            catch (Exception e)
+            {
+                Logger.LogError($"[ReStoryTools] 工作台收料异常：{e}");
             }
         }
 
@@ -313,6 +442,7 @@ namespace ReStoryTools
         /// <summary>供 M2-M3 使用的开关状态</summary>
         public bool BatchScrew => _batchScrew;
         public bool AutoDismantle => _autoDismantle;
+        public bool SolderMode => _solderMode;
 
         /// <summary>供补丁类使用的日志</summary>
         public void LogInfo(string msg) => Logger.LogInfo(msg);
