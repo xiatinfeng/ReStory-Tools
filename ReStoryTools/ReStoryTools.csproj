@@ -1,0 +1,67 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <!-- 游戏安装目录，改成你自己的路径（HintPath 引用游戏 dll 用） -->
+    <GameDir>D:/Games/ReStory</GameDir>
+    <LangVersion>latest</LangVersion>
+    <AssemblyName>ReStoryTools</AssemblyName>
+    <RootNamespace>ReStoryTools</RootNamespace>
+    <Nullable>disable</Nullable>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <Version>0.1.0</Version>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- BepInEx 5.4.23.5 core（游戏目录内）：插件只需引用 BepInEx.dll（Core 有同名类型会冲突） -->
+    <Reference Include="BepInEx">
+      <HintPath>$(GameDir)\BepInEx\core\BepInEx.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="0Harmony">
+      <HintPath>$(GameDir)\BepInEx\core\0Harmony.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+
+    <!-- Unity 引擎（游戏 Managed） -->
+    <Reference Include="UnityEngine">
+      <HintPath>$(GameDir)\Restory_Data\Managed\UnityEngine.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>$(GameDir)\Restory_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.UI">
+      <HintPath>$(GameDir)\Restory_Data\Managed\UnityEngine.UI.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.InputLegacyModule">
+      <HintPath>$(GameDir)\Restory_Data\Managed\UnityEngine.InputLegacyModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.IMGUIModule">
+      <HintPath>$(GameDir)\Restory_Data\Managed\UnityEngine.IMGUIModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+
+    <!-- 游戏程序集 -->
+    <Reference Include="Restory.Assembly">
+      <HintPath>$(GameDir)\Restory_Data\Managed\Restory.Assembly.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="StompyRobot.SRDebugger">
+      <HintPath>$(GameDir)\Restory_Data\Managed\StompyRobot.SRDebugger.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Zenject">
+      <HintPath>$(GameDir)\Restory_Data\Managed\Zenject.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Sirenix.Serialization">
+      <HintPath>$(GameDir)\Restory_Data\Managed\Sirenix.Serialization.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+</Project>

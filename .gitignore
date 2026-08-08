@@ -1,0 +1,10 @@
+# 构建产物
+bin/
+obj/
+
+# 本地 BepInEx 安装包（下载缓存，不入库）
+_bepinex/
+
+# IDE
+.vs/
+*.user
