@@ -141,28 +141,28 @@ namespace ReStoryTools
         {
             GUILayout.BeginVertical();
 
-            GUILayout.Label("便捷工具（F9 关闭）");
+            GUILayout.Label(L.T("panel_hint"));
 
-            _batchScrew = GUILayout.Toggle(_batchScrew, "批量拆装螺丝（拆一颗连拆 / 装一颗连装）");
-            _autoDismantle = GUILayout.Toggle(_autoDismantle, "元件批量自动拆卸");
+            _batchScrew = GUILayout.Toggle(_batchScrew, L.T("toggle_screw"));
+            _autoDismantle = GUILayout.Toggle(_autoDismantle, L.T("toggle_element"));
 
             GUILayout.Space(4);
-            if (GUILayout.Button("元件一键拼合（工作台当前层） [R]"))
+            if (GUILayout.Button(L.T("btn_assemble")))
             {
                 _installAllRequested = true;
                 Logger.LogInfo("[ReStoryTools] 元件一键拼合请求已排队");
             }
-            if (GUILayout.Button("超声波一键收料 [T]"))
+            if (GUILayout.Button(L.T("btn_collect")))
             {
                 _collectRequested = true;
                 Logger.LogInfo("[ReStoryTools] 一键收料请求已排队");
             }
 
             GUILayout.Space(6);
-            GUILayout.Label($"开关：批量拆装={_batchScrew} 元件拆装={_autoDismantle}");
+            GUILayout.Label(L.T("state_line", _batchScrew, _autoDismantle));
 
             GUILayout.Space(6);
-            GUILayout.Label("快捷键：R=拼合 T=收料 Ctrl+R/T=开关");
+            GUILayout.Label(L.T("hotkeys_line"));
             GUILayout.EndVertical();
             GUI.DragWindow();
         }
