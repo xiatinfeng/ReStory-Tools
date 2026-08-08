@@ -12,7 +12,9 @@
 |---|---|---|
 | **批量拆装螺丝** | `Ctrl+R` 开关 | 拆一颗连拆当前层可拆螺丝；装一颗连装当前层（自动装回"拆下来的原件"）。**电动螺丝刀专属**（秒拆/秒拧），普通螺丝刀不连锁 |
 | **元件批量自动拆卸** | `Ctrl+T` 开关 | 拆一个元件连锁拆当前层其他元件，自动摆到工作台角落（跳过螺丝与损坏件） |
-| **元件一键拼合** | `R` 键 / 面板按钮 | 工作台当前层可装元件自动拼合回设备；损坏件自动回收；污染件跳过（交给拖拽聚集） |
+| **一键电焊** | `Ctrl+E` 开关 | 开启后元件进入焊接模式自动完成所有焊点（`ForceCompleteSoldering`），省去移动电烙铁；只焊不清洁（烟灰清洁仍原版手动） |
+| **元件一键拼合** | `R` 键 / 面板按钮 | 三层取件：**工作台优先** → **库存（材料堆）补充** → **缺货统计**（日志报告缺货清单）；损坏件自动回收；污染件跳过（交给拖拽聚集） |
+| **工作台收料** | `E` 键 / 面板按钮 | 工作台表面游离元件一键收进库存（不影响组装中的设备；损坏件自动留台面） |
 | **污染件拖拽聚集** | 自动（拖污染件时） | 拿起一个污染件，其他污染件跟随鼠标；拖到清洗机松手一起投洗（容量满自动停），拖别处松手落回原位 |
 | **超声波一键收料** | `T` 键 / 面板按钮 | 清洗机内全部元件取回并入库（游戏原生 API） |
 
@@ -44,7 +46,10 @@ dotnet build -c Release -p:GameDir="D:/你的/游戏安装目录"
 ## 技术要点
 
 - **Harmony 补丁**：`ThreadedElement.CompleteInteraction`（螺丝拆/装，Prefix 区分 `IsInstalling`）、
-  `InsertableElement.CompleteInteraction`（元件连锁拆）、`DraggingDisassembleState.Enter/Exit`（污染件聚集）
+  `InsertableElement.CompleteInteraction`（元件连锁拆）、`DraggingDisassembleState.Enter/Exit`（污染件聚集）、
+  `SolderingService.UpdateSolderingProcess`（一键电焊）
+- **拼合取件链**：工作台 `WorkSurface.PlacedElements` → 库存 `IInventory.StorageElements`
+  （`StorageItemElement.ElementData.Clone()` + `ElementService.CreateElementOnSurface` 实体化，游戏原版同款）→ 缺货统计
 - **Zenject 容器**：`ProjectContext.Instance.Container.TryResolve<T>()` + 遍历 `SceneContext` 兜底
   （游戏服务绑在场景级容器）
 - **私有成员访问**：反射缓存委托（`CompleteInteraction`、`HideSmallElementProjection`、`SetSelectedSocket`、
