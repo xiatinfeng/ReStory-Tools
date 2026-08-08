@@ -21,16 +21,20 @@ zh = """================================================================
 2. 启动游戏，进工作台后按 F9 打开面板，或用快捷键
 
 【快捷键】
-  R         元件一键拼合（工作台当前层，损坏件自动回收）
+  R         元件一键拼合（工作台→库存→缺货统计）
   T         超声波一键收料（清洗机元件全部入库）
+  E         工作台收料进库存（台面散件一键收）
   Ctrl+R    批量拆装螺丝 开关（电动螺丝刀专属）
   Ctrl+T    元件批量自动拆卸 开关
+  Ctrl+E    一键电焊 开关（焊接自动完成）
   F9        便捷面板 开关
 
 【功能】
   - 批量拆装螺丝：拆一颗连拆当前层，装一颗连装当前层（装回拆下的原件）
   - 元件批量自动拆卸：连锁拆当前层元件，自动摆到工作台角落
-  - 元件一键拼合：干净件拼合 / 污染件跳过（拖拽聚集清洗）/ 损坏件自动回收
+  - 一键电焊：开启后元件进入焊接模式自动完成所有焊点（只焊不清洁）
+  - 元件一键拼合：三层取件——工作台优先 → 库存（材料堆）补充 → 缺货统计（日志报告）
+  - 工作台收料：台面游离元件一键收进库存（不影响组装中的设备）
   - 污染件拖拽聚集：拖一个污染件，其他污染件跟随鼠标，拖到清洗机一起投洗
   - 超声波一键收料：清洗完的元件一键收进库存
 
@@ -64,16 +68,21 @@ en = """================================================================
 2. Launch the game. In the workshop press F9 for the panel, or use hotkeys.
 
 [Hotkeys]
-  R         Assemble all current-layer elements (damaged parts auto-recycled)
+  R         Assemble current-layer elements (workbench → inventory → missing report)
   T         Collect all elements from the ultrasonic bath into storage
+  E         Collect workbench surface parts into storage
   Ctrl+R    Toggle 'Batch Screws' (electric screwdriver only)
   Ctrl+T    Toggle 'Auto-Dismantle Elements'
+  Ctrl+E    Toggle 'Auto-Solder' (instantly complete soldering)
   F9        Toggle the QoL panel
 
 [Features]
   - Batch Screws: chain-dismantle current-layer screws / chain-install originals
   - Auto-Dismantle Elements: chain-dismantle current-layer, auto-place on bench corner
-  - Assemble Elements: clean snap in / dirty skipped (drag-follow cleaning) / damaged auto-recycled
+  - Auto-Solder: soldering completes instantly when a part enters soldering mode (cleaning stays manual)
+  - Assemble Elements: 3-tier sourcing — workbench first, then inventory (material pile),
+    missing parts are reported (for use with ReStory-AutoOrder)
+  - Collect Workbench: store all loose surface parts into inventory (does not affect assembled devices)
   - Dirty-Element Drag Follow: pick up one dirty part, others follow; drop at the ultrasonic
     bath to wash all at once (stops when bath is full)
   - One-Key Collect: take all washed elements out of the bath into storage
