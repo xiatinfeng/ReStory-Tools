@@ -20,13 +20,15 @@
 
 ## 安装
 
-1. 安装 [BepInEx 5.4.23.5](https://github.com/BepInEx/BepInEx/releases/tag/v5.4.23.5)（win-x64，解压到游戏根目录）
-   - 游戏是 Unity 6.3（6000.3.10f1）——**必须用 5.4.23.5+**（含 Unity 6 修复），BepInEx 6.0.0-pre 系列会崩
+> **前置**：先安装 [ReStory BepInEx Framework](https://github.com/xiatinfeng/ReStory-BepInEx-Framework)
+> （BepInEx 5.4.23.5 + 防卡顿配置，一次安装所有 mod 共用）。
+> 游戏是 Unity 6.3（6000.3.10f1）——**必须用 5.4.23.5+**（含 Unity 6 修复），BepInEx 6.0.0-pre 系列会崩。
+
+1. 安装框架包（解压到游戏根目录，见框架包说明）
 2. 把编译出的 `ReStoryTools.dll` 放入 `<游戏目录>/BepInEx/plugins/ReStoryTools/`
 3. 启动游戏（首次会弹 BepInEx 控制台），进工作台后按 `F9` 或快捷键使用
 
-> 可选优化：`<游戏目录>/BepInEx/config/BepInEx.cfg` 里 `UnityLogListening = false`
-> （默认 true 会拦截每帧游戏日志导致卡顿）。
+> 界面语言跟随系统（中/英）；强制切换：插件目录建 `lang.txt`（内容 `en`/`zh`）。
 
 ## 构建
 
